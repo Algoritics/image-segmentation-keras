@@ -104,6 +104,7 @@ def train(model,
           custom_augmentation=None,
           other_inputs_paths=None,
           preprocessing=None,
+          cache_images=False,
           read_image_type=1  # cv2.IMREAD_COLOR = 1 (rgb),
                              # cv2.IMREAD_GRAYSCALE = 0,
                              # cv2.IMREAD_UNCHANGED = -1 (4 channels like RGBA)
@@ -190,14 +191,14 @@ def train(model,
         input_height, input_width, output_height, output_width,
         do_augment=do_augment, augmentation_name=augmentation_name,
         custom_augmentation=custom_augmentation, other_inputs_paths=other_inputs_paths,
-        preprocessing=preprocessing, read_image_type=read_image_type)
+        preprocessing=preprocessing, read_image_type=read_image_type, cache_images=cache_images)
 
     if validate:
         val_gen = image_segmentation_generator(
             val_images, val_annotations,  val_batch_size,
             n_classes, input_height, input_width, output_height, output_width,
             other_inputs_paths=other_inputs_paths,
-            preprocessing=preprocessing, read_image_type=read_image_type)
+            preprocessing=preprocessing, read_image_type=read_image_type, cache_images=cache_images)
 
     if callbacks is None and (not checkpoints_path is  None) :
         default_callback = ModelCheckpoint(
