@@ -1,9 +1,8 @@
-numpy
-h5py
-tqdm
-keras>=2.3.0
-tensorflow>=2.2
-opencv-python
-tqdm
-imageio>=2.5.0
-imgaug>=0.4.0
+numpy==1.19.5
+h5py==2.10.0
+tqdm==4.62.3
+keras==2.4.3
+tensorflow==2.4.1
+opencv-python=4.5.5.62
+imageio==2.5.0
+imgaug==0.4.0
