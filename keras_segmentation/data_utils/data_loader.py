@@ -249,7 +249,7 @@ def image_segmentation_generator(images_path, segs_path, batch_size,
                                  augmentation_name="aug_all",
                                  custom_augmentation=None,
                                  other_inputs_paths=None, preprocessing=None,
-                                 read_image_type=cv2.IMREAD_COLOR , ignore_segs=False ):
+                                 read_image_type=cv2.IMREAD_COLOR , ignore_segs=False, cache_images=False ):
     
 
     if not ignore_segs:
@@ -261,6 +261,23 @@ def image_segmentation_generator(images_path, segs_path, batch_size,
         random.shuffle( img_list )
         img_list_gen = itertools.cycle( img_list )
 
+    cached_image_array = []
+    cached_seg_array = []
+    if cache_images:
+        print('generating cache')
+        if ignore_segs:
+            for im in img_list:
+                #cached_image_array.append(cv2.resize(cv2.imread(im, read_image_type), (input_width, output_height)))
+                cached_image_array.append(cv2.imread(im, read_image_type))
+        else:
+            for im, seg in img_seg_pairs:
+                cached_image_array.append(cv2.imread(im, read_image_type))
+                cached_seg_array.append(cv2.imread(seg, 1))
+                print('.', end='')
+        print('cache created. size: ', len(cached_image_array), len(cached_seg_array))
+
+    cached_image_array_gen = itertools.cycle(cached_image_array)
+    cached_seg_array_gen = itertools.cycle(cached_seg_array)
 
     while True:
         X = []
@@ -268,14 +285,25 @@ def image_segmentation_generator(images_path, segs_path, batch_size,
         for _ in range(batch_size):
             if other_inputs_paths is None:
 
-                if ignore_segs:
-                    im = next( img_list_gen )
-                    seg = None 
-                else:
-                    im, seg = next(zipped)
-                    seg = cv2.imread(seg, 1)
+                if cache_images:
 
-                im = cv2.imread(im, read_image_type)
+                    if ignore_segs:
+                        im = next(cached_image_array_gen)
+                        seg = None 
+                    else:
+                        im = next(cached_image_array_gen)
+                        seg = next(cached_seg_array_gen)
+
+                else:
+
+                    if ignore_segs:
+                        im = next( img_list_gen )
+                        seg = None 
+                    else:
+                        im, seg = next(zipped)
+                        seg = cv2.imread(seg, 1)
+
+                    im = cv2.imread(im, read_image_type)
                 
 
                 if do_augment:
