@@ -48,7 +48,7 @@ def get_image_list_from_path(images_path ):
     return image_files
 
 
-def get_pairs_from_paths(images_path, segs_path, ignore_non_matching=False, other_inputs_paths=None):
+def get_pairs_from_paths(images_path, segs_path, ignore_non_matching=True, other_inputs_paths=None):
     """ Find all the images from the images_path directory and
         the segmentation images from the segs_path directory
         while checking integrity of data """
@@ -58,12 +58,20 @@ def get_pairs_from_paths(images_path, segs_path, ignore_non_matching=False, othe
     image_files = []
     segmentation_files = {}
 
-    for dir_entry in os.listdir(images_path):
-        if os.path.isfile(os.path.join(images_path, dir_entry)) and \
-                os.path.splitext(dir_entry)[1] in ACCEPTABLE_IMAGE_FORMATS:
-            file_name, file_extension = os.path.splitext(dir_entry)
-            image_files.append((file_name, file_extension,
-                                os.path.join(images_path, dir_entry)))
+    if type(images_path) == str and os.path.isdir(images_path):
+        for dir_entry in os.listdir(images_path):
+            if os.path.isfile(os.path.join(images_path, dir_entry)) and \
+                    os.path.splitext(dir_entry)[1] in ACCEPTABLE_IMAGE_FORMATS:
+                file_name, file_extension = os.path.splitext(dir_entry)
+                image_files.append((file_name, file_extension,
+                                    os.path.join(images_path, dir_entry)))
+    else:
+        for dir_entry in images_path:
+            if os.path.isfile(dir_entry) and \
+                    os.path.splitext(dir_entry)[1] in ACCEPTABLE_IMAGE_FORMATS:
+                file_name, file_extension = os.path.splitext(dir_entry)
+                image_files.append((os.path.basename(file_name), file_extension,
+                                    dir_entry))
 
     if other_inputs_paths is not None:
         other_inputs_files = []
@@ -81,19 +89,36 @@ def get_pairs_from_paths(images_path, segs_path, ignore_non_matching=False, othe
 
             other_inputs_files.append(temp)
 
-    for dir_entry in os.listdir(segs_path):
-        if os.path.isfile(os.path.join(segs_path, dir_entry)) and \
-           os.path.splitext(dir_entry)[1] in ACCEPTABLE_SEGMENTATION_FORMATS:
-            file_name, file_extension = os.path.splitext(dir_entry)
-            full_dir_entry = os.path.join(segs_path, dir_entry)
-            if file_name in segmentation_files:
-                raise DataLoaderError("Segmentation file with filename {0}"
-                                      " already exists and is ambiguous to"
-                                      " resolve with path {1}."
-                                      " Please remove or rename the latter."
-                                      .format(file_name, full_dir_entry))
 
-            segmentation_files[file_name] = (file_extension, full_dir_entry)
+    if type(segs_path) == str and os.path.isdir(segs_path):
+        for dir_entry in os.listdir(segs_path):
+            if os.path.isfile(os.path.join(segs_path, dir_entry)) and \
+            os.path.splitext(dir_entry)[1] in ACCEPTABLE_SEGMENTATION_FORMATS:
+                file_name, file_extension = os.path.splitext(dir_entry)
+                full_dir_entry = os.path.join(segs_path, dir_entry)
+                if file_name in segmentation_files:
+                    raise DataLoaderError("Segmentation file with filename {0}"
+                                        " already exists and is ambiguous to"
+                                        " resolve with path {1}."
+                                        " Please remove or rename the latter."
+                                        .format(file_name, full_dir_entry))
+
+                segmentation_files[file_name] = (file_extension, full_dir_entry)
+    else:
+        for dir_entry in segs_path:
+            if os.path.isfile(dir_entry) and \
+            os.path.splitext(dir_entry)[1] in ACCEPTABLE_SEGMENTATION_FORMATS:
+                file_name, file_extension = os.path.splitext(dir_entry)
+                full_dir_entry = dir_entry
+                file_name = os.path.basename(file_name)
+                if file_name in segmentation_files:
+                    raise DataLoaderError("Segmentation file with filename {0}"
+                                        " already exists and is ambiguous to"
+                                        " resolve with path {1}."
+                                        " Please remove or rename the latter."
+                                        .format(file_name, full_dir_entry))
+
+                segmentation_files[file_name] = (file_extension, full_dir_entry)
 
     return_value = []
     # Match the images and segmentations
